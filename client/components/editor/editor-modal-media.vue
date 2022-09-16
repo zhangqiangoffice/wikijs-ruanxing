@@ -88,7 +88,7 @@
                               v-icon(color='teal') mdi-text-short
                             v-list-item-content {{$t('common:actions.properties')}}
                           template(v-if='props.item.kind === `IMAGE`')
-                            v-list-item(@click='previewDialog = true', disabled)
+                            v-list-item(@click='previewDialog = true')
                               v-list-item-avatar(size='24')
                                 v-icon(color='green') mdi-image-search-outline
                               v-list-item-content {{$t('common:actions.preview')}}
@@ -160,7 +160,6 @@
                 v-icon.mr-3(:color='$vuetify.theme.dark ? `white` : `teal`') mdi-cloud-download
                 .body-2(:class='$vuetify.theme.dark ? `white--text` : `teal--text`') {{$t('editor:assets.fetchImage')}}
                 v-spacer
-                v-chip(label, color='white', small).teal--text coming soon
               v-text-field.mt-3(
                 v-model='remoteImageUrl'
                 outlined
@@ -172,7 +171,7 @@
             v-card-actions.pa-3
               .caption.grey--text.text-darken-2 Max 5 MB
               v-spacer
-              v-btn.px-4(color='teal', disabled) {{$t('common:actions.fetch')}}
+              v-btn.px-4(color='teal', :disabled='!remoteImageUrl' @click='fetch') {{$t('common:actions.fetch')}}
 
           v-card.mt-3.radius-7.animated.fadeInRight.wait-p4s(:light='!$vuetify.theme.dark', :dark='$vuetify.theme.dark')
             v-card-text.pb-0
@@ -225,6 +224,18 @@
           v-spacer
           v-btn(text, @click='deleteDialog = false', :disabled='deleteAssetLoading') {{$t('common:actions.cancel')}}
           v-btn.px-3(color='red darken-2', @click='deleteAsset', :loading='deleteAssetLoading').white--text {{$t('common:actions.delete')}}
+    
+    v-dialog(v-model='previewDialog', max-width='550', persistent)
+      v-card
+        .dialog-header.is-short
+          v-icon.mr-2(color='white') mdi-image-search-outline
+          span {{$t('common:actions.preview')}}
+        v-card-text.pt-5.img-preview
+          img(:src='`/${currentAsset.filename}`') 
+          .d {{currentAsset.filename}}
+        v-card-chin
+          v-spacer
+          v-btn(text, @click='previewDialog = false') {{$t('common:actions.close')}}
 </template>
 
 <script>
@@ -368,6 +379,10 @@ export default {
         icon: 'check'
       })
     },
+    fetch () {
+      this.$root.$emit('fetchImage', this.remoteImageUrl)
+      this.activeModal = ''
+    },
     insert () {
       const asset = _.find(this.assets, ['id', this.currentFileId])
       const assetPath = this.folderTree.map(f => f.slug).join('/')
@@ -375,7 +390,8 @@ export default {
         kind: asset.kind,
         path: this.currentFolderId > 0 ? `/${assetPath}/${asset.filename}` : `/${asset.filename}`,
         text: asset.filename,
-        align: this.imageAlignment
+        align: this.imageAlignment,
+        mime: asset.mime
       })
       this.activeModal = ''
     },
@@ -552,6 +568,9 @@ export default {
 </script>
 
 <style lang='scss'>
+.img-preview {
+  text-align: center;
+}
 .editor-modal-media {
   position: fixed !important;
   top: 112px;

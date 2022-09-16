@@ -87,6 +87,27 @@ export default {
             words: stats.words
           }
         }
+      },
+      mediaEmbed: {
+        providers: [{
+          name: 'myprovider',
+          url: [
+            /^lizzy.*\.com.*\/media\/(\w+)/,
+            /^www\.lizzy.*/,
+            /^.*/
+          ],
+          html: match => {
+            const input = match['input'];
+            return (
+              '<div style="position: relative; padding-bottom: 100%; height: 0; padding-bottom: 70%;">' +
+                `<iframe src="${input}" ` +
+                  'style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" ' +
+                  'frameborder="0" allowtransparency="true" allow="encrypted-media">' +
+                '</iframe>' +
+              '</div>'
+            );
+          }
+        }]
       }
     })
     this.$refs.toolbarContainer.appendChild(this.editor.ui.view.toolbar.element)
@@ -99,6 +120,12 @@ export default {
       this.$store.set('editor/content', beautify(this.editor.getData(), { indent_size: 2, end_with_newline: true }))
     }, 300))
 
+    this.$root.$on('fetchImage', url => {
+      this.editor.execute('imageInsert', {
+        source: url
+      })
+    })
+
     this.$root.$on('editorInsert', opts => {
       switch (opts.kind) {
         case 'IMAGE':
@@ -107,9 +134,13 @@ export default {
           })
           break
         case 'BINARY':
-          this.editor.execute('link', opts.path, {
-            linkIsDownloadable: true
-          })
+          if (opts.mime && opts.mime.startsWith('video')) {
+            this.editor.execute('htmlEmbed', `<video controls><source src="${opts.path}" type="video/mp4"><source src="${opts.path}" type="video/ogg">dddd</video>`)
+          } else {  
+            this.editor.execute('link', opts.path, {
+              linkIsDownloadable: true
+            })
+          }
           break
         case 'DIAGRAM':
           this.editor.execute('imageInsert', {
