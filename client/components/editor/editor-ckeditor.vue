@@ -135,7 +135,7 @@ export default {
           break
         case 'BINARY':
           if (opts.mime && opts.mime.startsWith('video')) {
-            this.editor.execute('htmlEmbed', `<video controls><source src="${opts.path}" type="video/mp4"><source src="${opts.path}" type="video/ogg">dddd</video>`)
+            this.editor.execute('htmlEmbed', `<video controls><source src="${opts.path}" type="video/mp4"><source src="${opts.path}" type="video/ogg"></video>`)
           } else {  
             this.editor.execute('link', opts.path, {
               linkIsDownloadable: true
