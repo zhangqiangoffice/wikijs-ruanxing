@@ -75,8 +75,6 @@ export default {
       name: '',
       groups: [],
       group: [],
-      mustChangePwd: false,
-      sendWelcomeEmail: false
     }
   },
   computed: {
@@ -105,8 +103,8 @@ export default {
             groups: this.group,
             email: this.name + '@wikijs.com',
             passwordRaw: this.name + '@#wikijs.com123',
-            mustChangePassword: this.mustChangePwd,
-            sendWelcomeEmail: this.sendWelcomeEmail
+            mustChangePassword: false,
+            sendWelcomeEmail: false
           },
           watchLoading (isLoading) {
             this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-users-create')
