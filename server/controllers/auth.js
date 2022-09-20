@@ -20,6 +20,18 @@ const bruteforce = new ExpressBrute(new BruteKnex({
   }
 })
 
+const bruteforceShot = new ExpressBrute(new BruteKnex({
+  createTable: true,
+  knex: WIKI.models.knex
+}), {
+  freeRetries: 50,
+  minWait: 1 * 1000,
+  maxWait: 2 * 1000,
+  failCallback: (req, res, next) => {
+    res.status(401).send('Too many failed attempts! Try again later!')
+  }
+})
+
 /**
  * Login form
  */
@@ -118,7 +130,7 @@ router.post('/login', bruteforce.prevent, async (req, res, next) => {
   }
 })
 
-router.get('/loginbytoken', bruteforce.prevent, async (req, res, next) => {
+router.get('/loginbytoken', bruteforceShot.prevent, async (req, res, next) => {
   const { token } = req.query
   if (!token) {
     res.redirect(WIKI.config.loginByToken.redirectUrl)
