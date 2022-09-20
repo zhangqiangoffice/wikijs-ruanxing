@@ -10,6 +10,9 @@
           v-spacer
           v-btn.animated.fadeInDown.wait-p2s.mr-3(outlined, color='grey', icon, @click='refresh')
             v-icon mdi-refresh
+          v-btn.animated.synchronize-btn.fadeInDown(color='primary', large, depressed, @click='synchronizeUser')
+            v-icon(left) mdi-plus
+            span Synchronize User
           v-btn.animated.fadeInDown(color='primary', large, depressed, @click='createUser')
             v-icon(left) mdi-plus
             span New User
@@ -76,6 +79,7 @@
             v-spacer
 
     user-create(v-model='isCreateDialogShown', @refresh='refresh(false)')
+    user-synchronize(v-model='isSynchronizeDialogShown', @refresh='refresh(false)')
 </template>
 
 <script>
@@ -84,11 +88,13 @@ import gql from 'graphql-tag'
 
 import { StatusIndicator } from 'vue-status-indicator'
 import UserCreate from './admin-users-create.vue'
+import UserSynchronize from './admin-users-synchronize.vue'
 
 export default {
   components: {
     StatusIndicator,
-    UserCreate
+    UserCreate,
+    UserSynchronize
   },
   data() {
     return {
@@ -109,7 +115,8 @@ export default {
       filterStrategy: 'all',
       search: '',
       loading: false,
-      isCreateDialogShown: false
+      isCreateDialogShown: false,
+      isSynchronizeDialogShown: false
     }
   },
   computed: {
@@ -121,6 +128,9 @@ export default {
   methods: {
     createUser() {
       this.isCreateDialogShown = true
+    },
+    synchronizeUser() {
+      this.isSynchronizeDialogShown = true
     },
     async refresh(notify = true) {
       await this.$apollo.queries.users.refetch()
@@ -188,5 +198,7 @@ export default {
 </script>
 
 <style lang='scss'>
-
+.synchronize-btn{
+  margin-right: 10px;
+}
 </style>
