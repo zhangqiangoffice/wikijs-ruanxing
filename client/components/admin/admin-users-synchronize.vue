@@ -101,8 +101,8 @@ export default {
             providerKey: this.provider,
             name: this.name,
             groups: this.group,
-            email: this.name + '@wikijs.com',
-            passwordRaw: this.name + '@#wikijs.com123',
+            email: '',
+            passwordRaw: '',
             mustChangePassword: false,
             sendWelcomeEmail: false
           },

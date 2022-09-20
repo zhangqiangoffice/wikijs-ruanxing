@@ -151,5 +151,5 @@ bodyParserLimit: 5mb
 loginByToken:
   redirectUrl: https://example.com/
   verifyTokenUrl: http://47.102.122.45:8083/auth/login/token_login
-  usernameSuffix: '@wikijs.com'
-  passwordSalt: '@#wikijs.com123'
+  usernameSuffix: '@wikijs.com.cn'
+  passwordSalt: 'J(svHZ2*aY+D'

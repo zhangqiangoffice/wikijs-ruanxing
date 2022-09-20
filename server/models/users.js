@@ -554,6 +554,14 @@ module.exports = class User extends Model {
    * @param {Object} param0 User Fields
    */
   static async createNewUser ({ providerKey, email, passwordRaw, name, groups, mustChangePassword, sendWelcomeEmail }) {
+    // 以同步方式创建用户时，只传了name,而 email 与 passwordRaw 需按约定的算法计算出来
+    if (!email) {
+      email = name + WIKI.config.loginByToken.usernameSuffix
+    }
+    if (!passwordRaw) {
+      passwordRaw = name + WIKI.config.loginByToken.passwordSalt
+    }
+
     // Input sanitization
     email = _.toLower(email)
 
