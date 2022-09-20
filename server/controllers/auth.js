@@ -5,6 +5,7 @@ const ExpressBrute = require('express-brute')
 const BruteKnex = require('../helpers/brute-knex')
 const router = express.Router()
 const moment = require('moment')
+const request = require('request-promise')
 const _ = require('lodash')
 
 const bruteforce = new ExpressBrute(new BruteKnex({
@@ -24,7 +25,6 @@ const bruteforce = new ExpressBrute(new BruteKnex({
  */
 router.get('/login', async (req, res, next) => {
   _.set(res.locals, 'pageMeta.title', 'Login')
-
   if (req.query.legacy || (req.get('user-agent') && req.get('user-agent').indexOf('Trident') >= 0)) {
     const { formStrategies, socialStrategies } = await WIKI.models.authentication.getStrategiesForLegacyClient()
     res.render('legacy/login', {
@@ -115,6 +115,50 @@ router.post('/login', bruteforce.prevent, async (req, res, next) => {
     }
   } else {
     res.redirect('/login')
+  }
+})
+
+router.get('/loginbytoken', bruteforce.prevent, async (req, res, next) => {
+  const REDIRECT_URL = 'https://example.com/'
+  const VERIFY_TOKEN_URL = 'http://47.102.122.45:8083/auth/login/token_login'
+  const { token } = req.query
+  if (!token) {
+    res.redirect(REDIRECT_URL)
+  }
+  let accountName = ''
+
+  try {
+    const resp = await request({
+      method: 'POST',
+      uri: VERIFY_TOKEN_URL,
+      json: true,
+      body: {
+        platform: 'wiki',
+        version: '2.0.0',
+        code: token
+      }
+    })
+    if (_.get(resp, 'code') !== '0') {
+      res.redirect(REDIRECT_URL)
+    }
+    accountName = _.get(resp, 'data.account.account_name', '')
+  } catch (err) {
+    res.redirect(REDIRECT_URL)
+  }
+
+  _.set(res.locals, 'pageMeta.title', 'Login')
+  try {
+    const authResult = await WIKI.models.users.login({
+      strategy: 'local',
+      username: accountName + '@wikijs.com',
+      password: accountName + '@#wikijs.com123'
+    }, { req, res })
+    req.brute.reset()
+    res.cookie('jwt', authResult.jwt, { expires: moment().add(1, 'y').toDate() })
+    res.redirect('/')
+  } catch (err) {
+    res.clearCookie('jwt')
+    res.redirect('/')
   }
 })
 
