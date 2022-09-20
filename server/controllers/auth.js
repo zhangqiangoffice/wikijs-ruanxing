@@ -119,18 +119,16 @@ router.post('/login', bruteforce.prevent, async (req, res, next) => {
 })
 
 router.get('/loginbytoken', bruteforce.prevent, async (req, res, next) => {
-  const REDIRECT_URL = 'https://example.com/'
-  const VERIFY_TOKEN_URL = 'http://47.102.122.45:8083/auth/login/token_login'
   const { token } = req.query
   if (!token) {
-    res.redirect(REDIRECT_URL)
+    res.redirect(WIKI.config.loginByToken.redirectUrl)
   }
   let accountName = ''
 
   try {
     const resp = await request({
       method: 'POST',
-      uri: VERIFY_TOKEN_URL,
+      uri: WIKI.config.loginByToken.verifyTokenUrl,
       json: true,
       body: {
         platform: 'wiki',
@@ -139,19 +137,19 @@ router.get('/loginbytoken', bruteforce.prevent, async (req, res, next) => {
       }
     })
     if (_.get(resp, 'code') !== '0') {
-      res.redirect(REDIRECT_URL)
+      res.redirect(WIKI.config.loginByToken.redirectUrl)
     }
     accountName = _.get(resp, 'data.account.account_name', '')
   } catch (err) {
-    res.redirect(REDIRECT_URL)
+    res.redirect(WIKI.config.loginByToken.redirectUrl)
   }
 
   _.set(res.locals, 'pageMeta.title', 'Login')
   try {
     const authResult = await WIKI.models.users.login({
       strategy: 'local',
-      username: accountName + '@wikijs.com',
-      password: accountName + '@#wikijs.com123'
+      username: accountName + WIKI.config.loginByToken.usernameSuffix,
+      password: accountName + WIKI.config.loginByToken.passwordSalt
     }, { req, res })
     req.brute.reset()
     res.cookie('jwt', authResult.jwt, { expires: moment().add(1, 'y').toDate() })
