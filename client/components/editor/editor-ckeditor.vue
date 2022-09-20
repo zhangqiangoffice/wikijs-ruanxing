@@ -69,6 +69,9 @@ export default {
       language: this.locale,
       placeholder: 'Type the page content here',
       disableNativeSpellChecker: false,
+      iframeEmbed: {
+        showPreviews: true,
+      },
       // TODO: Mention autocomplete
       //
       // mention: {
@@ -87,27 +90,6 @@ export default {
             words: stats.words
           }
         }
-      },
-      mediaEmbed: {
-        providers: [{
-          name: 'myprovider',
-          url: [
-            /^lizzy.*\.com.*\/media\/(\w+)/,
-            /^www\.lizzy.*/,
-            /^.*/
-          ],
-          html: match => {
-            const input = match['input'];
-            return (
-              '<div style="position: relative; padding-bottom: 100%; height: 0; padding-bottom: 70%;">' +
-                `<iframe src="${input}" ` +
-                  'style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" ' +
-                  'frameborder="0" allowtransparency="true" allow="encrypted-media">' +
-                '</iframe>' +
-              '</div>'
-            );
-          }
-        }]
       }
     })
     this.$refs.toolbarContainer.appendChild(this.editor.ui.view.toolbar.element)
