@@ -147,6 +147,7 @@
                 :instant-upload='false'
                 :allow-revert='false'
                 @processfile='onFileProcessed'
+                @warning='onWarning'
               )
             v-divider
             v-card-actions.pa-3
@@ -427,6 +428,13 @@ export default {
       }, 5000)
 
       await this.$apollo.queries.assets.refetch()
+    },
+    onWarning (error) {
+      this.$store.commit('showNotification', {
+        message: error.body,
+        style: 'error',
+        icon: 'warning'
+      })
     },
     downFolder(folder) {
       this.$store.commit('editor/pushMediaFolderTree', folder)
