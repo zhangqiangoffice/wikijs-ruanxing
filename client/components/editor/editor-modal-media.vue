@@ -75,8 +75,12 @@
                     td.text-xs-center(v-if='$vuetify.breakpoint.lgAndUp')
                       v-chip.ma-0(x-small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`')
                         .overline {{props.item.ext.toUpperCase().substring(1)}}
-                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes }}
-                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.createdAt | moment('from') }}
+                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes| props.item.kind }}
+                    //- td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.createdAt | moment('from') }}
+                    td.caption(v-if='$vuetify.breakpoint.mdAndUp&&props.item.kind === `IMAGE`')
+                      img(:src="url+`${props.item.filename}`").imgs
+                    td.caption(v-else)
+                      div.imgs
                     td(v-if='$vuetify.breakpoint.smAndUp')
                       v-menu(offset-x, min-width='200')
                         template(v-slot:activator='{ on }')
@@ -88,10 +92,10 @@
                               v-icon(color='teal') mdi-text-short
                             v-list-item-content {{$t('common:actions.properties')}}
                           template(v-if='props.item.kind === `IMAGE`')
-                            v-list-item(@click='previewDialog = true')
-                              v-list-item-avatar(size='24')
-                                v-icon(color='green') mdi-image-search-outline
-                              v-list-item-content {{$t('common:actions.preview')}}
+                            //- v-list-item(@click='previewDialog = true')
+                            //-   v-list-item-avatar(size='24')
+                            //-     v-icon(color='green') mdi-image-search-outline
+                            //-   v-list-item-content {{$t('common:actions.preview')}}
                             v-list-item(@click='', disabled)
                               v-list-item-avatar(size='24')
                                 v-icon(color='indigo') mdi-crop-rotate
@@ -145,13 +149,13 @@
                 max-files='10'
                 :server='filePondServerOpts'
                 :instant-upload='false'
-                :allow-revert='false'
+                :allow-revert='true'
                 @processfile='onFileProcessed'
                 @warning='onWarning'
               )
             v-divider
             v-card-actions.pa-3
-              .caption.grey--text.text-darken-2 Max 10 files, 5 MB each
+              .caption.grey--text.text-darken-2  最多 10 个图片, 每个不超过5MB
               v-spacer
               v-btn.px-4(color='teal', dark, @click='upload') {{$t('common:actions.upload')}}
 
@@ -170,7 +174,7 @@
               )
             v-divider
             v-card-actions.pa-3
-              .caption.grey--text.text-darken-2 Max 5 MB
+              .caption.grey--text.text-darken-2 最大 5 MB
               v-spacer
               v-btn.px-4(color='teal', :disabled='!remoteImageUrl' @click='fetch') {{$t('common:actions.fetch')}}
 
@@ -225,18 +229,21 @@
           v-spacer
           v-btn(text, @click='deleteDialog = false', :disabled='deleteAssetLoading') {{$t('common:actions.cancel')}}
           v-btn.px-3(color='red darken-2', @click='deleteAsset', :loading='deleteAssetLoading').white--text {{$t('common:actions.delete')}}
-    
-    v-dialog(v-model='previewDialog', max-width='550', persistent)
+
+    v-dialog(v-model='previewDialog', max-width='900', persistent)
       v-card
         .dialog-header.is-short
           v-icon.mr-2(color='white') mdi-image-search-outline
           span {{$t('common:actions.preview')}}
         v-card-text.pt-5.img-preview
-          img(:src='`/${currentAsset.filename}`') 
+          img(:src='`/${currentAsset.filename}`').imgs
           .d {{currentAsset.filename}}
         v-card-chin
           v-spacer
-          v-btn(text, @click='previewDialog = false') {{$t('common:actions.close')}}
+          v-btn.ml-3.ml.mr-0.my-0.btn.radius-7(color='red darken-2', large, @click='previewDialog = false', dark)
+                  v-icon(left) mdi-close
+                  span {{$t('common:actions.close')}}
+
 </template>
 
 <script>
@@ -252,9 +259,19 @@ import createAssetFolderMutation from 'gql/editor/editor-media-mutation-folder-c
 import renameAssetMutation from 'gql/editor/editor-media-mutation-asset-rename.gql'
 import deleteAssetMutation from 'gql/editor/editor-media-mutation-asset-delete.gql'
 
-const FilePond = vueFilePond()
+import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation'
+import FilePondPluginImagePreview from 'filepond-plugin-image-preview'
+import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type'
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css'
+
 const localeSegmentRegex = /^[A-Z]{2}(-[A-Z]{2})?$/i
 const disallowedFolderChars = /[A-Z()=.!@#$%?&*+`~<>,;:\\/[\]¬{| ]/
+
+const FilePond = vueFilePond(
+  FilePondPluginFileValidateType,
+  FilePondPluginImageExifOrientation,
+  FilePondPluginImagePreview
+)
 
 export default {
   components: {
@@ -290,7 +307,8 @@ export default {
       renameAssetName: '',
       renameAssetLoading: false,
       deleteDialog: false,
-      deleteAssetLoading: false
+      deleteAssetLoading: false,
+      url: '/'
     }
   },
   computed: {
@@ -312,11 +330,11 @@ export default {
     },
     headers() {
       return _.compact([
-        this.$vuetify.breakpoint.smAndUp && { text: this.$t('editor:assets.headerId'), value: 'id', width: 80 },
+        this.$vuetify.breakpoint.smAndUp && { text: this.$t('editor:assets.headerId'), value: 'id', width: 10 },
         { text: this.$t('editor:assets.headerFilename'), value: 'filename' },
-        this.$vuetify.breakpoint.lgAndUp && { text: this.$t('editor:assets.headerType'), value: 'ext', width: 90 },
+        this.$vuetify.breakpoint.lgAndUp && { text: this.$t('editor:assets.headerType'), value: 'ext', width: 50 },
         this.$vuetify.breakpoint.mdAndUp && { text: this.$t('editor:assets.headerFileSize'), value: 'fileSize', width: 110 },
-        this.$vuetify.breakpoint.mdAndUp && { text: this.$t('editor:assets.headerAdded'), value: 'createdAt', width: 175 },
+        this.$vuetify.breakpoint.mdAndUp && { text: this.$t('common:actions.preview'), value: '', width: 175 },
         this.$vuetify.breakpoint.smAndUp && { text: this.$t('editor:assets.headerActions'), value: '', width: 80, sortable: false, align: 'right' }
       ])
     },
@@ -397,13 +415,37 @@ export default {
       this.activeModal = ''
     },
     browse () {
+      const files = this.$refs.pond.getFiles()
+      if (files.length >= 10) {
+        return this.$store.commit('showNotification', {
+          message: '最多同时上传10个文件',
+          style: 'warning',
+          icon: 'warning'
+        })
+      }
       this.$refs.pond.browse()
     },
+
+    onWarning (error) {
+      this.$store.commit('showNotification', {
+        message: '最多同时上传10个文件',
+        style: 'warning',
+        icon: 'warning'
+      })
+    },
+
     async upload () {
       const files = this.$refs.pond.getFiles()
       if (files.length < 1) {
         return this.$store.commit('showNotification', {
           message: this.$t('editor:assets.noUploadError'),
+          style: 'warning',
+          icon: 'warning'
+        })
+      }
+      if (files.length > 10) {
+        return this.$store.commit('showNotification', {
+          message: '最多同时上传10个文件',
           style: 'warning',
           icon: 'warning'
         })
@@ -429,23 +471,20 @@ export default {
 
       await this.$apollo.queries.assets.refetch()
     },
-    onWarning (error) {
-      this.$store.commit('showNotification', {
-        message: error.body,
-        style: 'error',
-        icon: 'warning'
-      })
-    },
     downFolder(folder) {
+      const assetPath = this.folderTree.map(f => f.slug).join('/')
       this.$store.commit('editor/pushMediaFolderTree', folder)
       this.currentFolderId = folder.id
       this.currentFileId = null
+      this.url = this.currentFolderId > 0 ? `${assetPath}/` + folder.name + '/' : `/`
     },
     upFolder() {
+      const assetPath = this.folderTree.map(f => f.slug).join('/')
       this.$store.commit('editor/popMediaFolderTree')
       const parentFolder = _.last(this.folderTree)
       this.currentFolderId = parentFolder ? parentFolder.id : 0
       this.currentFileId = null
+      this.url = this.currentFolderId > 0 ? `/${assetPath}/` : `/`
     },
     async createFolder() {
       this.$store.commit(`loadingStart`, 'editor-media-createfolder')
@@ -576,8 +615,26 @@ export default {
 </script>
 
 <style lang='scss'>
+.color{
+  color:blue;
+}
+.ml>.v-btn__content{
+    align-items: center;
+    color: inherit;
+    -js-display: flex;
+    display: flex;
+    flex: 1 0 auto;
+    justify-content: inherit;
+    line-height: normal;
+    position: relative;
+    margin-left: -8px;
+  }
 .img-preview {
   text-align: center;
+}
+.imgs{
+  width: 100%;
+  height: auto;
 }
 .editor-modal-media {
   position: fixed !important;
