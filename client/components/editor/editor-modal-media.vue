@@ -75,10 +75,10 @@
                     td.text-xs-center(v-if='$vuetify.breakpoint.lgAndUp')
                       v-chip.ma-0(x-small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`')
                         .overline {{props.item.ext.toUpperCase().substring(1)}}
-                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes| props.item.kind }}
+                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes }}
                     //- td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.createdAt | moment('from') }}
                     td.caption(v-if='$vuetify.breakpoint.mdAndUp&&props.item.kind === `IMAGE`')
-                      img(:src="url+`${props.item.filename}`").imgs
+                      img(:src="`${folderTree.map(({name}) => '/' + name).join('')}/${props.item.filename}`").imgs
                     td.caption(v-else)
                       div.imgs
                     td(v-if='$vuetify.breakpoint.smAndUp')
@@ -308,7 +308,6 @@ export default {
       renameAssetLoading: false,
       deleteDialog: false,
       deleteAssetLoading: false,
-      url: '/'
     }
   },
   computed: {
@@ -472,19 +471,15 @@ export default {
       await this.$apollo.queries.assets.refetch()
     },
     downFolder(folder) {
-      const assetPath = this.folderTree.map(f => f.slug).join('/')
       this.$store.commit('editor/pushMediaFolderTree', folder)
       this.currentFolderId = folder.id
       this.currentFileId = null
-      this.url = this.currentFolderId > 0 ? `${assetPath}/` + folder.name + '/' : `/`
     },
     upFolder() {
-      const assetPath = this.folderTree.map(f => f.slug).join('/')
       this.$store.commit('editor/popMediaFolderTree')
       const parentFolder = _.last(this.folderTree)
       this.currentFolderId = parentFolder ? parentFolder.id : 0
       this.currentFileId = null
-      this.url = this.currentFolderId > 0 ? `/${assetPath}/` : `/`
     },
     async createFolder() {
       this.$store.commit(`loadingStart`, 'editor-media-createfolder')
