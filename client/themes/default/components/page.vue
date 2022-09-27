@@ -293,7 +293,6 @@
                 span {{$t('common:comments.title')}}
               .comments-main
                 slot(name='comments')
-    nav-footer
     notify
     search-results
     v-fab-transition

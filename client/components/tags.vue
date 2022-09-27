@@ -145,7 +145,6 @@
         .text-center.py-2.animated.fadeInDown(v-if='this.pageTotal > 1')
           v-pagination(v-model='pagination.page', :length='pageTotal')
 
-    nav-footer
     notify
     search-results
 </template>

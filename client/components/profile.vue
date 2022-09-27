@@ -26,7 +26,6 @@
       transition(name='profile-router')
         router-view
 
-    nav-footer
     notify
     search-results
 </template>

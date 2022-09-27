@@ -124,7 +124,6 @@
 
     page-selector(mode='create', v-model='branchOffOpts.modal', :open-handler='branchOffHandle', :path='branchOffOpts.path', :locale='branchOffOpts.locale')
 
-    nav-footer
     notify
     search-results
 </template>

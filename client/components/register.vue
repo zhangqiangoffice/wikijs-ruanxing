@@ -92,7 +92,6 @@
                   v-spacer
 
     loader(v-model='isLoading', :mode='loaderMode', :icon='loaderIcon', :color='loaderColor', :title='loaderTitle', :subtitle='loaderSubtitle')
-    nav-footer(color='grey darken-5', dark-color='grey darken-5')
     notify(style='padding-top: 64px;')
 </template>
 
