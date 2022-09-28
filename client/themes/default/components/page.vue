@@ -285,7 +285,7 @@
               span {{$t('common:page.editPage')}}
             v-alert.mb-5(v-if='!isPublished', color='red', outlined, icon='mdi-minus-circle', dense)
               .caption {{$t('common:page.unpublishedWarning')}}
-            .contents(ref='container')
+            .contents(ref='container' @click='handleClickContents')
               slot(name='contents')
             .comments-container#discussion(v-if='commentsEnabled && commentsPerms.read && !printView')
               .comments-header
@@ -312,6 +312,19 @@
         :aria-label='$t(`common:actions.returnToTop`)'
         )
         v-icon mdi-arrow-up
+    v-dialog(v-model='showPreviewImgDialog', max-width='900', persistent)
+      v-card
+        .dialog-header.is-short
+          v-icon.mr-2(color='white') mdi-image-search-outline
+          span {{$t('common:actions.preview')}}
+        v-card-text.pt-5.img-preview
+          img(:src='previewImgSrc').imgs
+        v-card-chin
+          v-spacer
+          v-btn.ml-3.ml.mr-0.my-0.btn.radius-7(color='red darken-2', large, @click='showPreviewImgDialog = false', dark)
+                  v-icon(left) mdi-close
+                  span {{$t('common:actions.close')}}
+  
 </template>
 
 <script>
@@ -470,6 +483,8 @@ export default {
           }
         }
       },
+      showPreviewImgDialog: false,
+      previewImgSrc: '',
       winWidth: 0
     }
   },
@@ -639,12 +654,22 @@ export default {
       if (focusNewComment) {
         document.querySelector('#discussion-new').focus()
       }
+    },
+    handleClickContents ({target: { nodeName, src}}) {
+      if (nodeName === 'IMG' && src) {
+        this.previewImgSrc = src
+        this.showPreviewImgDialog = true
+      }
     }
   }
 }
 </script>
 
 <style lang="scss">
+
+.img-preview {
+  text-align: center;
+}
 
 .breadcrumbs-nav {
   .v-btn {
