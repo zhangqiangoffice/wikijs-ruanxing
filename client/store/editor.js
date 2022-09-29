@@ -25,6 +25,12 @@ export default {
     },
     popMediaFolderTree: (st) => {
       st.media.folderTree = st.media.folderTree.slice(0, -1)
+    },
+    renameMediaFolderTree: (st, {id, name}) => {
+      st.media.folderTree = st.media.folderTree.map(f => ({
+        ...f,
+        name: f.id === id ? name : f.name
+      }))
     }
   }
 }

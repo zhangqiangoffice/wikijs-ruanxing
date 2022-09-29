@@ -40,7 +40,8 @@
                   .body-2
                     span.mr-1 /
                     template(v-for='folder of folderTree')
-                      span(:key='folder.id') {{folder.name}}
+                      span.folder-name(:key='folder.id', @click='openRenameFolderDialog(folder)') {{folder.name}}
+                        v-icon.icon(color='grey') mdi-keyboard-outline
                       span.mx-1 /
                 .body-2(v-else) / #[em root]
               template(v-if='folders.length > 0 || currentFolderId > 0')
@@ -78,7 +79,7 @@
                     td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes }}
                     //- td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.createdAt | moment('from') }}
                     td.caption(v-if='$vuetify.breakpoint.mdAndUp&&props.item.kind === `IMAGE`')
-                      img(:src="`${folderTree.map(({name}) => '/' + name).join('')}/${props.item.filename}`").imgs
+                      img(:src="`${folderTree.map(({slug}) => '/' + slug).join('')}/${props.item.filename}`").imgs
                     td.caption(v-else)
                       div.imgs
                     td(v-if='$vuetify.breakpoint.smAndUp')
@@ -214,6 +215,28 @@
           v-btn(text, @click='renameDialog = false', :disabled='renameAssetLoading') {{$t('common:actions.cancel')}}
           v-btn.px-3(color='orange darken-3', @click='renameAsset', :loading='renameAssetLoading').white--text {{$t('common:actions.rename')}}
 
+    //- RENAME FOLDER DIALOG
+
+    v-dialog(v-model='renameFolderDialog', max-width='550', persistent)
+      v-card
+        .dialog-header.is-short.is-orange
+          v-icon.mr-2(color='white') mdi-keyboard
+          span 重命名文件夹
+        v-card-text.pt-5
+          .body-2 输入新名称
+          v-text-field(
+            outlined
+            single-line
+            :counter='255'
+            v-model='renameAssetFolderName'
+            @keyup.enter='renameAsset'
+            :disabled='renameAssetFolderLoading'
+          )
+        v-card-chin
+          v-spacer
+          v-btn(text, @click='renameFolderDialog = false', :disabled='renameAssetFolderLoading') {{$t('common:actions.cancel')}}
+          v-btn.px-3(color='orange darken-3', @click='renameAssetFolder', :loading='renameAssetFolderLoading').white--text {{$t('common:actions.rename')}}
+    
     //- DELETE DIALOG
 
     v-dialog(v-model='deleteDialog', max-width='550', persistent)
@@ -257,6 +280,7 @@ import listAssetQuery from 'gql/editor/editor-media-query-list.gql'
 import listFolderAssetQuery from 'gql/editor/editor-media-query-folder-list.gql'
 import createAssetFolderMutation from 'gql/editor/editor-media-mutation-folder-create.gql'
 import renameAssetMutation from 'gql/editor/editor-media-mutation-asset-rename.gql'
+import renameFolderMutation from 'gql/editor/editor-media-mutation-folder-rename.gql'
 import deleteAssetMutation from 'gql/editor/editor-media-mutation-asset-delete.gql'
 
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation'
@@ -306,6 +330,9 @@ export default {
       renameDialog: false,
       renameAssetName: '',
       renameAssetLoading: false,
+      renameFolderDialog: false,
+      renameAssetFolderName: '',
+      renameAssetFolderLoading: false,
       deleteDialog: false,
       deleteAssetLoading: false,
     }
@@ -514,6 +541,11 @@ export default {
       this.renameAssetName = this.currentAsset.filename
       this.renameDialog = true
     },
+    openRenameFolderDialog(folder) {
+      this.renameAssetFolderId = folder.id
+      this.renameAssetFolderName = folder.name
+      this.renameFolderDialog = true
+    },
     async renameAsset() {
       this.$store.commit(`loadingStart`, 'editor-media-renameasset')
       this.renameAssetLoading = true
@@ -542,6 +574,36 @@ export default {
       }
       this.renameAssetLoading = false
       this.$store.commit(`loadingStop`, 'editor-media-renameasset')
+    },
+    async renameAssetFolder() {
+      this.$store.commit(`loadingStart`, 'editor-media-renameassetfolder')
+      this.renameAssetFolderLoading = true
+      try {
+        const resp = await this.$apollo.mutate({
+          mutation: renameFolderMutation,
+          variables: {
+            id: this.renameAssetFolderId,
+            name: this.renameAssetFolderName
+          }
+        })
+        if (_.get(resp, 'data.assets.renameAssetFolder.responseResult.succeeded', false)) {
+        await this.$apollo.queries.folders.refetch()
+          this.$store.commit('editor/renameMediaFolderTree', { id: this.renameAssetFolderId, name: this.renameAssetFolderName})
+          this.$store.commit('showNotification', {
+            message: this.$t('editor:assets.renameSuccess'),
+            style: 'success',
+            icon: 'check'
+          })
+          this.renameFolderDialog = false
+          this.renameAssetFolderName = ''
+        } else {
+          this.$store.commit('pushGraphError', new Error(_.get(resp, 'data.assets.renameAssetFolder.responseResult.message')))
+        }
+      } catch (err) {
+        this.$store.commit('pushGraphError', err)
+      }
+      this.renameAssetFolderLoading = false
+      this.$store.commit(`loadingStop`, 'editor-media-renameassetfolder')
     },
     async deleteAsset() {
       this.$store.commit(`loadingStart`, 'editor-media-deleteasset')
@@ -610,6 +672,18 @@ export default {
 </script>
 
 <style lang='scss'>
+.folder-name {
+  cursor: pointer;
+
+  & .icon {
+    display: none;
+    font-size: 18px;
+  }
+
+  &:hover .icon {
+    display: unset;
+  }
+}
 .color{
   color:blue;
 }

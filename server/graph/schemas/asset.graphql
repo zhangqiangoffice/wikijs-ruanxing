@@ -41,6 +41,11 @@ type AssetMutation {
     filename: String!
   ): DefaultResponse @auth(requires: ["manage:system", "manage:assets"])
 
+  renameAssetFolder(
+    id: Int!
+    name: String!
+  ): DefaultResponse @auth(requires: ["manage:system", "manage:assets"])
+
   deleteAsset(
     id: Int!
   ): DefaultResponse @auth(requires: ["manage:system", "manage:assets"])

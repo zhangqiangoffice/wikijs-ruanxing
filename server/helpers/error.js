@@ -37,6 +37,14 @@ module.exports = {
     message: 'You are not authorized to rename this asset to the requested name.',
     code: 2009
   }),
+  AssetFolderRenameCollision: CustomError('AssetFolderRenameCollision', {
+    message: 'An asset folder with the same name in the same parent folder already exists.',
+    code: 2010
+  }),
+  AssetFolderInvalid: CustomError('AssetFolderInvalid', {
+    message: 'This asset folder does not exist or is invalid.',
+    code: 2011
+  }),
   AuthAccountBanned: CustomError('AuthAccountBanned', {
     message: 'Your account has been disabled.',
     code: 1013

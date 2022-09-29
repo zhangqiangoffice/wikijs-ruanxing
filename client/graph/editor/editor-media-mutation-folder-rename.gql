@@ -1,0 +1,12 @@
+mutation ($id: Int!, $name: String!) {
+  assets {
+    renameAssetFolder(id:$id, name: $name) {
+      responseResult {
+        succeeded
+        errorCode
+        slug
+        message
+      }
+    }
+  }
+}

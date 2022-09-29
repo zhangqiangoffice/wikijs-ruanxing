@@ -151,6 +151,37 @@ module.exports = {
       }
     },
     /**
+     * Rename an Asset Folder
+     */
+    async renameAssetFolder(obj, args, context) {
+      try {
+        const folder = await WIKI.models.assetFolders.query().findById(args.id)
+        if (folder) {
+          // Check for collision
+          const folderCollision = await WIKI.models.assetFolders.query().where({
+            name: args.name,
+            parentId: folder.parentId
+          }).first()
+          if (folderCollision) {
+            throw new WIKI.Error.AssetFolderRenameCollision()
+          }
+
+          // Update folder name
+          await WIKI.models.assetFolders.query().patch({
+            name: args.name
+          }).findById(args.id)
+
+          return {
+            responseResult: graphHelper.generateSuccess('Asset folder has been renamed successfully.')
+          }
+        } else {
+          throw new WIKI.Error.AssetFolderInvalid()
+        }
+      } catch (err) {
+        return graphHelper.generateError(err)
+      }
+    },
+    /**
      * Delete an Asset
      */
     async deleteAsset(obj, args, context) {
