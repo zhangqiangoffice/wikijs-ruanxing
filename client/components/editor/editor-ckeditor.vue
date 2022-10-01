@@ -67,7 +67,7 @@ export default {
 
     this.editor = await DecoupledEditor.create(this.$refs.editor, {
       language: this.locale,
-      placeholder: 'Type the page content here',
+      placeholder: '在此输入内容',
       disableNativeSpellChecker: false,
       iframeEmbed: {
         showPreviews: true,
