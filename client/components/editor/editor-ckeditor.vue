@@ -64,25 +64,15 @@ export default {
   },
   async mounted () {
     this.$store.set('editor/editorKey', 'ckeditor')
+    const editorData = this.mode !== 'create' ? this.$store.get('editor/content') : ''
 
-    this.editor = await DecoupledEditor.create(this.$refs.editor, {
+    this.editor = await DecoupledEditor.create(editorData, {
       language: this.locale,
       placeholder: '在此输入内容',
       disableNativeSpellChecker: false,
       iframeEmbed: {
         showPreviews: true,
       },
-      // TODO: Mention autocomplete
-      //
-      // mention: {
-      //   feeds: [
-      //     {
-      //       marker: '@',
-      //       feed: [ '@Barney', '@Lily', '@Marshall', '@Robin', '@Ted' ],
-      //       minimumCharacters: 1
-      //     }
-      //   ]
-      // },
       wordCount: {
         onUpdate: stats => {
           this.stats = {
@@ -93,10 +83,8 @@ export default {
       }
     })
     this.$refs.toolbarContainer.appendChild(this.editor.ui.view.toolbar.element)
-
-    if (this.mode !== 'create') {
-      this.editor.setData(this.$store.get('editor/content'))
-    }
+    this.editor.ui.view.editable.element.className += ' contents';
+    this.$refs.editor.parentNode.replaceChild(this.editor.ui.view.editable.element, this.$refs.editor);
 
     this.editor.model.document.on('change:data', _.debounce(evt => {
       this.$store.set('editor/content', beautify(this.editor.getData(), { indent_size: 2, end_with_newline: true }))
@@ -210,6 +198,17 @@ $editor-height-mobile: calc(100vh - 56px - 16px);
 
   .ck.ck-toolbar__items {
     justify-content: center;
+  }
+  
+  .ck-source-editing-area {
+    background-color: mc('grey', '100');
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 0 5px hsla(0, 0, 0, .1);
+    margin: 1rem auto 0;
+    width: calc(100vw - 256px - 16vw);
+    min-height: calc(100vh - 64px - 24px - 1rem - 40px);
+    border-radius: 5px;
   }
 
   > .ck-editor__editable {
