@@ -85,6 +85,12 @@ html {
   }
 }
 
+.video-embed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .iframe-embed:not(.ck-widget) {
   position: relative;
   min-height: 350px;
