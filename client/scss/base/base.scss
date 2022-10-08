@@ -85,22 +85,8 @@ html {
   }
 }
 
-.video-embed {
+.video-embed, .iframe-embed {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.iframe-embed:not(.ck-widget) {
-  position: relative;
-  min-height: 350px;
-  overflow: hidden;
-}
-
-.iframe-embed:not(.ck-widget) > iframe {
-  position: absolute; 
-  width: 100%; 
-  height: 100%; 
-  top: 0; 
-  left: 0;
 }
